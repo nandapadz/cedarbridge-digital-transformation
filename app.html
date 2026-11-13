@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Cedarbridge | Service requests</title>
+<style>
+/*
+ * Cedarbridge workspace / visual refresh
+ * A quiet, work-first palette: ink, aubergine and a single lavender accent.
+ * Layout follows the existing service workflows; no external fonts or assets.
+ */
+:root {
+  --forest: #282034;
+  --dark: #292139;
+  --ink: #2c2735;
+  --secondary: #6d6875;
+  --line: #e8e4ec;
+  --mint: #f0eaf8;
+  --accent: #6d4c97;
+  --cream: #ffffff;
+  --warning: #956422;
+  --danger: #ac3947;
+  --white: #ffffff;
+  --surface: #f8f7fa;
+  --sidebar-muted: #bcb1ca;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: "Segoe UI", Aptos, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; }
+button, select, input, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+a { color: inherit; }
+button:focus-visible, a:focus-visible, select:focus-visible,
+input:focus-visible, textarea:focus-visible {
+  outline: 3px solid #bc9de0;
+  outline-offset: 2px;
+}
+.hidden, [hidden] { display: none !important; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Navigation has the strongest colour; the working area stays neutral. */
+.app { min-height:100vh; display:grid; grid-template-columns:224px minmax(0,1fr); }
+.sidebar { background:var(--forest); color:#fff; padding:27px 15px 22px; display:flex; flex-direction:column; gap:42px; }
+.brand { display:flex; gap:11px; align-items:center; padding:0 8px; }
+.brand-mark { height:37px; width:37px; flex:none; display:grid; place-items:center; border-radius:6px; background:#e9dff6; color:#38294c; font-family:Georgia,serif; font-size:22px; font-weight:700; letter-spacing:-.08em; }
+.brand-name { font-size:17px; line-height:1.15; font-weight:700; letter-spacing:-.025em; }
+.brand-sub { margin-top:5px; font-size:11px; color:#cfc4da; }
+.side-label { padding:0 13px; margin:0 0 12px; font-size:10px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--sidebar-muted); }
+.nav { display:grid; gap:4px; }
+.nav button { width:100%; display:flex; align-items:center; gap:12px; text-align:left; font-size:13px; font-weight:540; color:#dfd5e8; background:transparent; border:1px solid transparent; border-left:3px solid transparent; border-radius:5px; padding:12px 13px; }
+.nav button:hover { color:#fff; background:#372d47; }
+.nav button.active { color:#fff; border-left-color:#b79ad9; background:#403250; font-weight:650; }
+.nav svg { width:17px; height:17px; opacity:.84; }
+.sidebar-bottom { margin-top:auto; padding:19px 12px 0; border-top:1px solid #4a3d58; font-size:11px; line-height:1.7; color:#bfb3cc; }
+.sidebar-bottom strong { color:#efe6f7; font-size:12px; font-weight:650; display:block; margin-bottom:6px; }
+
+/* Shell and page hierarchy */
+.main { min-width:0; }
+.topbar { min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:20px; background:#fff; border-bottom:1px solid var(--line); padding:12px clamp(22px,3vw,48px); }
+.path { font-size:12px; color:#8a8492; }
+.path strong { color:var(--ink); font-weight:650; }
+.topright { display:flex; gap:18px; align-items:center; }
+.mini-label { color:#77717e; font-size:11px; font-weight:600; }
+.toprole { display:grid; gap:3px; }
+select.role { max-width:215px; padding:8px 10px; background:#fff; border:1px solid #dcd5e4; border-radius:6px; color:var(--ink); font-size:12px; }
+.local-pill { display:flex; align-items:center; gap:8px; padding:7px 0 7px 16px; border-left:1px solid var(--line); background:transparent; color:#706b74; font-size:11px; font-weight:550; white-space:nowrap; }
+.dot { height:7px; width:7px; border-radius:50%; background:#599676; }
+.content { max-width:1430px; margin:0 auto; padding:36px clamp(22px,3vw,48px) 65px; }
+.release-note { font-size:11px; color:#64576f; background:#f3eef7; border-left:3px solid #9a7bbb; border-radius:2px; margin:0 0 25px; padding:9px 13px; }
+.eyebrow { font-size:10px; font-weight:750; letter-spacing:.125em; text-transform:uppercase; color:#765b94; margin:0 0 9px; }
+.page-head { display:flex; justify-content:space-between; align-items:start; gap:28px; margin:0 0 28px; }
+.page-head h1 { font-size:clamp(27px,2.9vw,36px); font-weight:650; line-height:1.2; letter-spacing:-.045em; color:#2a2335; margin:0; }
+.page-head p { font-size:13px; line-height:1.6; color:#77707c; margin:10px 0 0; max-width:650px; }
+.page-head > div:first-child { min-width:0; flex:1 1 420px; }
+.head-actions { display:flex; flex:0 0 auto; flex-wrap:nowrap; justify-content:flex-end; gap:8px; padding-top:5px; }
+
+/* Controls: square-ish corners and restrained hover effects. */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:38px; border:1px solid transparent; border-radius:6px; padding:9px 13px; font-size:12px; font-weight:650; line-height:1.25; white-space:nowrap; }
+.btn svg { width:15px; height:15px; }
+.btn.primary { background:#674889; color:#fff; }
+.btn.primary:hover { background:#533770; }
+.btn.outline { background:#fff; color:#523f67; border-color:#ded6e6; }
+.btn.outline:hover { background:#f7f2fb; }
+.btn.ghost { background:#f0ecf4; color:#554465; }
+.btn.ghost:hover { background:#e7dfee; }
+.btn.danger { color:#a83f4e; background:#fff; border-color:#efced4; }
+.btn.small { min-height:30px; padding:6px 10px; font-size:11px; }
+.linkbutton { padding:0; border:0; background:transparent; color:#67418c; text-decoration:underline; text-underline-offset:3px; text-decoration-color:#cab5dc; font-size:12px; font-weight:670; text-align:left; }
+.linkbutton:hover { color:#432a62; }
+
+/* A single score strip is calmer than four coloured metric cards. */
+.grid-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:26px; background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.stat { min-width:0; min-height:115px; padding:19px 22px 16px; background:#fff; border-right:1px solid var(--line); }
+.stat:last-child { border-right:0; }
+.stathead { display:flex; justify-content:space-between; align-items:center; }
+.statname { color:#797180; font-size:12px; font-weight:600; }
+.stat-icon { display:none; }
+.statvalue { margin-top:13px; font-size:32px; font-weight:660; letter-spacing:-.065em; line-height:1; color:#342548; font-variant-numeric:tabular-nums; }
+.stat small { display:block; margin-top:6px; color:#8e8794; font-size:11px; }
+
+/* Working table */
+.panel { background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.panel-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:19px 22px; border-bottom:1px solid var(--line); }
+.panel-heading h2 { margin:0; font-size:15px; line-height:1.35; font-weight:680; letter-spacing:-.015em; }
+.panel-heading p { color:#85808a; font-size:12px; margin:4px 0 0; }
+.toolbar { padding:15px 21px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; border-bottom:1px solid var(--line); }
+.searchbox { flex:1; min-width:210px; display:flex; align-items:center; gap:9px; border:1px solid #e0dae6; border-radius:6px; padding:0 11px; background:#fff; }
+.searchbox svg { height:16px; width:16px; color:#9b91a4; }
+.searchbox input { width:100%; min-height:38px; border:0; background:transparent; outline:none; color:var(--ink); font-size:12px; }
+.searchbox input::placeholder { color:#968e9c; }
+.filter { border:1px solid #e0dae6; border-radius:6px; padding:9px 11px; color:#5e536a; background:#fff; font-size:12px; max-width:200px; min-height:38px; }
+.tablewrap { overflow:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { text-align:left; white-space:nowrap; padding:12px 18px; background:#f8f7fa; font-size:10px; color:#847c8a; text-transform:uppercase; letter-spacing:.07em; font-weight:750; }
+td { padding:16px 18px; border-top:1px solid #eeeaf1; color:#625b69; vertical-align:middle; }
+td strong { display:block; color:#302937; font-weight:650; }
+td small { display:block; margin-top:3px; color:#8f8794; font-size:11px; }
+tbody tr:hover { background:#faf7fd; }
+.badge { display:inline-flex; justify-content:center; align-items:center; gap:5px; padding:4px 8px; border-radius:4px; background:#f2eff4; color:#625c6d; font-size:11px; font-weight:650; white-space:nowrap; }
+.badge.new { background:#f2eff5; color:#746584; }
+.badge.inprogress { background:#ede5f7; color:#65418a; }
+.badge.waiting { background:#fbf1db; color:#8d621f; }
+.badge.resolved { background:#edf3ee; color:#3e6e55; }
+.badge.closed { background:#eceaed; color:#706b75; }
+.badge.high { background:#fae9ec; color:#a33d4e; }
+.badge.standard { background:#f3f0f5; color:#786983; }
+.empty { text-align:center; padding:59px 20px; color:#7d7584; }
+.empty strong { display:block; font-size:16px; color:#373044; margin:12px 0 5px; }
+.empty p { margin:0 auto 17px; max-width:420px; font-size:12px; }
+.empty-icon { display:grid; place-items:center; margin:auto; width:51px; height:51px; background:#f1ecf5; color:#6b5188; font-size:23px; border-radius:7px; }
+
+.mobile-table-hint { display:none; padding:9px 15px; color:#83738e; background:#fbf9fc; font-size:11px; }
+/* Form: strong labels, generous typing space, small requirement sidebar. */
+.form-layout { display:grid; grid-template-columns:minmax(0,1.75fr) minmax(238px,.78fr); gap:18px; align-items:start; }
+.formpanel { padding:25px; }
+.formpanel h2 { margin:0 0 4px; font-size:17px; font-weight:650; }
+.subtext { margin:0 0 22px; font-size:12px; color:#87808d; }
+.formgrid { display:grid; grid-template-columns:1fr 1fr; gap:19px; }
+.field { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.field.full { grid-column:1/-1; }
+label,.field-label { color:#4c4358; font-size:12px; font-weight:650; }
+label em,.field-label em { color:#b14156; font-style:normal; }
+.field input,.field select,.field textarea,.detail-control { min-height:42px; width:100%; padding:10px 11px; border:1px solid #dfd8e5; border-radius:6px; background:#fff; color:#2f2936; font-size:13px; }
+.field textarea { min-height:112px; resize:vertical; }
+.field .help { color:#928b98; font-size:11px; }
+.error { color:#ac3947; font-size:11px; }
+.error:empty { display:none; }
+[aria-invalid=true] { border-color:#bd5263!important; background:#fffafb!important; }
+.radio-row { display:flex; flex-wrap:wrap; gap:9px; }
+.radio-row label { display:flex; align-items:center; gap:9px; min-width:93px; padding:10px 12px; border:1px solid #ded8e5; border-radius:6px; font-weight:540; cursor:pointer; }
+.radio-row input { width:auto; min-height:auto; accent-color:#704c98; }
+.form-actions { margin-top:24px; padding-top:23px; display:flex; flex-wrap:wrap; gap:9px; border-top:1px solid var(--line); }
+.asidepanel { padding:21px; }
+.asidepanel h3 { font-size:14px; font-weight:700; margin:0 0 10px; }
+.asideitem { padding:15px 0; border-top:1px solid #eeeaf1; }
+.asideitem:first-of-type { border-top:0; }
+.asideitem b { font-size:12px; color:#4d405d; }
+.asideitem p { margin:6px 0 0; font-size:12px; line-height:1.55; color:#7a7281; }
+.aside-code { display:inline-block; border-radius:3px; padding:3px 5px; font-size:10px; letter-spacing:.035em; font-weight:750; background:#eee6f5; color:#725195; }
+.note { padding:12px 14px; border:1px solid #e4dbe9; border-radius:5px; background:#f6f2f9; color:#655672; font-size:12px; line-height:1.6; }
+.warn { background:#fff8ed; border-color:#f0dec2; color:#8a622e; }
+.notice { margin-top:18px; padding:10px 12px; background:#f8f6fa; border-left:2px solid #b9a8cb; border-radius:0; color:#796c84; font-size:11px; line-height:1.65; }
+.save-success { margin-top:16px; padding:12px 15px; border:1px solid #d8e7dd; border-left:3px solid #5f9971; border-radius:5px; background:#f0f7f2; color:#356247; font-size:12px; }
+.callout { margin-top:18px; background:transparent; border:1px solid #e5e1e9; border-radius:6px; color:#7a7380; padding:15px 18px; font-size:11px; line-height:1.65; }
+.callout strong { color:#54475d; font-weight:650; }
+.footer { color:#928c96; font-size:11px; line-height:1.65; margin:25px 0 0; }
+
+/* Charts need comparison, not decoration. */
+.insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.chart-body { padding:22px; }
+.barrow { display:grid; grid-template-columns:135px minmax(0,1fr) 30px; align-items:center; gap:12px; color:#615b69; font-size:12px; margin:16px 0; }
+.bartrack { background:#efeaf3; height:8px; border-radius:2px; overflow:hidden; }
+.barfill { background:#8566aa; height:100%; border-radius:2px; }
+
+/* Dialog retains the full activity trail and makes the active controls obvious. */
+.dialog { width:min(700px,calc(100vw - 24px)); max-height:min(90vh,950px); overflow:auto; padding:0; background:#fff; border:1px solid #dcd4e3; border-radius:10px; box-shadow:0 30px 85px #241b3670; color:var(--ink); }
+.dialog::backdrop { background:#241d32a8; }
+.dialog-head { display:flex; align-items:start; justify-content:space-between; gap:15px; padding:23px 26px 20px; border-bottom:1px solid var(--line); }
+.dialog-head h2 { margin:5px 0 0; font-size:21px; letter-spacing:-.03em; font-weight:650; }
+.dialog-head small { color:#8b8094; }
+.xbtn { display:grid; place-items:center; width:32px; height:32px; border:1px solid #e4dfe9; border-radius:5px; background:#fff; font-size:19px; color:#6e597b; }
+.dialog-body { padding:23px 26px; }
+.detail-metadata { display:flex; gap:7px; flex-wrap:wrap; margin:3px 0 18px; }
+.detail-desc { background:#f8f7fa; color:#4f4559; white-space:pre-wrap; line-height:1.65; font-size:13px; padding:15px 17px; border-radius:6px; margin-bottom:18px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.detail-card { padding:15px; border:1px solid #e8e3ed; border-radius:6px; }
+.detail-card h3 { margin:0 0 7px; color:#817889; font-size:11px; font-weight:650; }
+.detail-card p { margin:0; color:#372e41; font-size:13px; }
+.section-head { margin:24px 0 13px; color:#43364d; font-size:13px; font-weight:700; }
+.audit { padding:0 0 0 8px; border-left:2px solid #e6daef; margin:0; list-style:none; }
+.audit li { margin:0 0 15px 14px; position:relative; color:#635b6c; font-size:12px; }
+.audit li:before { content:""; position:absolute; left:-21px; top:6px; width:8px; height:8px; background:#8d6ab1; border:2px solid #f4eef9; border-radius:50%; }
+.audit time { display:block; margin-top:4px; color:#97909e; font-size:11px; }
+.dialog-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.divider { margin:23px 0; border:0; border-top:1px solid var(--line); }
+.toast { z-index:50; position:fixed; bottom:20px; right:20px; padding:13px 17px; max-width:min(420px,calc(100vw - 40px)); background:#312340; color:#fff; border-radius:6px; box-shadow:0 10px 30px #27193742; font-size:12px; font-weight:600; }
+
+@media (max-width:1220px) {
+  .head-actions { flex-wrap:wrap; }
+}
+@media (max-width:1150px) {
+  .app { grid-template-columns:200px minmax(0,1fr); }
+  .sidebar { padding-left:12px; padding-right:12px; }
+  .grid-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .stat { border-bottom:1px solid var(--line); }
+  .stat:nth-child(2n) { border-right:0; }
+  .stat:nth-child(n+3) { border-bottom:0; }
+  .page-head { flex-wrap:wrap; }
+  .head-actions { justify-content:flex-start; }
+  .form-layout { grid-template-columns:1fr; }
+}
+@media (max-width:740px) {
+  .app { display:block; }
+  .sidebar { padding:15px 16px 12px; gap:14px; }
+  .brand { padding:0; }
+  .brand-mark { height:31px; width:31px; font-size:19px; }
+  .brand-sub { display:none; }
+  .side-label,.sidebar-bottom { display:none; }
+  .nav { display:flex; flex-wrap:wrap; gap:4px; }
+  .nav button { width:auto; padding:9px 11px; font-size:12px; }
+  .nav svg { display:none; }
+  .topbar { min-height:auto; padding:10px 16px; }
+  .path { display:none; }
+  .topright { justify-content:space-between; flex-wrap:wrap; gap:9px; width:100%; }
+  .toprole { display:flex; align-items:center; gap:10px; min-width:0; }
+  .local-pill { border-left:0; padding:0; }
+  .content { padding:24px 14px 48px; }
+  .page-head { display:block; }
+  .page-head h1 { font-size:29px; }
+  .head-actions { margin-top:16px; }
+  .grid-stats { margin-bottom:20px; }
+  .stat { min-height:105px; padding:17px 14px; }
+  .statvalue { font-size:28px; }
+  .panel-heading,.toolbar { padding:15px; }
+  .mobile-table-hint { display:block; }
+  .formpanel,.asidepanel { padding:19px; }
+  .formgrid,.insights-grid,.detail-grid { grid-template-columns:1fr; }
+  .formgrid .field { grid-column:1/-1; }
+  .dialog-head,.dialog-body { padding:20px; }
+  .barrow { grid-template-columns:115px minmax(0,1fr) 25px; }
+}
+
+</style>
+</head>
+<body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="13" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-9M22 20v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" stroke="currentColor" fill="none" stroke-width="2"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z" stroke="currentColor" fill="none" stroke-width="1.8"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 11 0 4-2.2 7-5 7-3 0-6-3-6-7 0-3 2-5 3-6 0 4 2 5 3 5 2-2 0-7 0-10z" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M5 21h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+</svg>
+<div class="app">
+<aside class="sidebar" aria-label="Workspace navigation">
+  <div class="brand"><span class="brand-mark">C.</span><div><div class="brand-name">Cedarbridge</div><div class="brand-sub">Community Services</div></div></div>
+  <div><div class="side-label">Workspace</div><nav class="nav" aria-label="Main">
+    <button type="button" class="active" data-nav="queue" aria-current="page"><svg><use href="#i-grid"></use></svg> Work queue</button>
+    <button type="button" data-nav="new"><svg><use href="#i-plus"></use></svg> Create request</button>
+    <button type="button" data-nav="insights"><svg><use href="#i-chart"></use></svg> Insights</button>
+  </nav></div>
+  <div class="sidebar-bottom"><strong>Workspace prototype · v1.3</strong>Fictional healthcare operations workflow. Designed to demonstrate user stories US-01, US-02 and US-03. Not connected to real services.</div>
+</aside>
+<div class="main">
+<header class="topbar"><div class="path">Projects / <strong>Service Request Workspace</strong></div><div class="topright"><div class="toprole"><label for="role" class="mini-label">Demo role</label><select id="role" class="role" aria-label="Simulated user role"><option value="coordinator">Operations Coordinator</option><option value="viewer">Read-only Viewer</option></select></div><span class="local-pill"><i class="dot"></i> Browser-local data</span></div></header>
+<div class="content">
+<div class="release-note" role="status">Cedarbridge v1.3 · Training workspace. Fictional requests only; save a JSON backup before changing files.</div>
+<div class="note" id="storage-warning" hidden role="alert">Browser storage is unavailable in this session. You can try the interface, but your changes may disappear after refresh. Use a normal browser window to save locally.</div>
+<section id="view-queue" data-page="queue">
+  <div class="page-head"><div><div class="eyebrow">Operations / Requests</div><h1>Service requests</h1><p>Keep track of incoming work, ownership and what needs attention. Fictional records are saved to this browser.</p></div><div class="head-actions"><button class="btn outline" type="button" id="export-json"><svg><use href="#i-down"></use></svg> Export JSON</button><button class="btn outline" type="button" id="export-csv">Export CSV</button><button class="btn outline" id="import-json" type="button" title="Restore fictional local demo records from a Cedarbridge JSON export">Import demo JSON</button><input id="import-file" type="file" accept=".json,application/json" hidden aria-label="Choose Cedarbridge demo JSON"><button class="btn primary" type="button" data-nav="new"><svg><use href="#i-plus"></use></svg> Create request</button></div></div>
+  <div role="status" aria-live="polite" class="save-success" id="queue-save-feedback" hidden style="margin:0 0 18px 0;"></div>
+  <div class="grid-stats" id="stats" aria-label="Request summary">
+   <div class="stat"><div class="stathead"><span class="statname">Total requests</span><span class="stat-icon"><svg><use href="#i-folder"></use></svg></span></div><div class="statvalue" id="stat-total">0</div><small>Stored locally</small></div>
+   <div class="stat"><div class="stathead"><span class="statname">Open requests</span><span class="stat-icon"><svg><use href="#i-clock"></use></svg></span></div><div class="statvalue" id="stat-open">0</div><small>Needing action</small></div>
+   <div class="stat"><div class="stathead"><span class="statname">High priority</span><span class="stat-icon"><svg><use href="#i-fire"></use></svg></span></div><div class="statvalue" id="stat-high">0</div><small>Not yet closed</small></div>
+   <div class="stat"><div class="stathead"><span class="statname">Resolved / closed</span><span class="stat-icon"><svg><use href="#i-check"></use></svg></span></div><div class="statvalue" id="stat-done">0</div><small>Work completed or awaiting closure</small></div>
+  </div>
+  <div class="panel"><div class="panel-heading"><div><h2>Request register</h2><p>Select a reference to view its details or update the record.</p></div><span class="badge standard" id="count-label">0 records</span></div>
+  <div class="toolbar"><div class="searchbox"><svg><use href="#i-search"></use></svg><input type="search" id="search" placeholder="Search reference, summary or type" aria-label="Search requests"></div><select class="filter" id="filter-status" aria-label="Filter by status"><option value="all">All statuses</option><option>New</option><option>In Progress</option><option>Awaiting Information</option><option>Resolved</option><option>Closed</option></select><select class="filter" id="filter-priority" aria-label="Filter by priority"><option value="all">All priorities</option><option>High</option><option>Standard</option></select></div>
+  <div class="mobile-table-hint">Swipe the table to see all details →</div><div class="tablewrap" tabindex="0" aria-label="Request register. Scroll horizontally to read all columns."><table><thead><tr><th>Reference</th><th>Request</th><th>Priority</th><th>Status</th><th>Owner</th><th>Created</th><th>Action</th></tr></thead><tbody id="request-rows"></tbody></table></div>
+  <div class="empty" id="queue-empty"><div class="empty-icon" aria-hidden="true">▤</div><strong id="empty-title">Your queue is ready</strong><p id="empty-desc">No requests yet. Create your first fictional service request or load some sample data to explore the workflow.</p><button class="btn outline" id="load-samples" type="button">Load fictional sample requests</button></div>
+  </div>
+  <div class="callout"><strong>Privacy and storage:</strong> Data is saved only in this browser using localStorage. Export demo JSON before opening a different HTML file, then use Import demo JSON if the old data is not shown. It is not stored in Jira, a cloud database or a shared service. It may be lost if you clear browser data. Use fictional information only. <button type="button" id="clear-data" class="linkbutton">Delete local demo data</button>.</div>
+</section>
+<section id="view-new" data-page="new" hidden>
+ <div class="page-head"><div><div class="eyebrow">Operations / Request intake</div><h1>Create a request</h1><p>Record the details below. A reference will be generated when you save the request.</p></div><div class="head-actions"><button class="btn outline" data-nav="queue" type="button">Back to queue</button></div></div>
+ <div class="form-layout"><div class="panel formpanel"><h2>Request information</h2><p class="subtext">Fields marked * are required under the draft Cedarbridge business rules.</p>
+ <form id="request-form" novalidate><div class="formgrid">
+ <div class="field"><label for="request-type">Request type <em>*</em></label><select id="request-type"><option value="">Choose a type</option><option>Administration</option><option>Facilities</option><option>Access</option><option>Other</option></select><span class="error" id="request-type-error"></span></div>
+ <div class="field"><label for="service-date">Service date <em>*</em></label><input id="service-date" type="date"><span class="error" id="service-date-error"></span></div>
+ <div class="field full"><label for="request-summary">Request summary <em>*</em></label><input id="request-summary" type="text" maxlength="120" placeholder="e.g. Update room access for a test appointment"><span class="help">10–120 characters; fictional details only.</span><span class="error" id="request-summary-error"></span></div>
+ <div class="field full"><label for="request-description">Description <em>*</em></label><textarea id="request-description" maxlength="2000" placeholder="Describe the test request, why it is needed, and the expected outcome..."></textarea><span class="help">20–2,000 characters; no real patient or hospital records.</span><span class="error" id="request-description-error"></span></div>
+ <div class="field full"><span class="field-label" id="impact-label">Does this affect same-day service delivery? <em>*</em></span><div role="radiogroup" aria-labelledby="impact-label" class="radio-row"><label><input type="radio" name="impact" value="Yes"> Yes</label><label><input type="radio" name="impact" value="No"> No</label></div><span class="error" id="impact-error"></span></div>
+ <div class="field full" id="reason-group" hidden><label for="urgency-reason">Reason for same-day impact <em>*</em></label><textarea id="urgency-reason" placeholder="Explain why this fictional request is urgent..."></textarea><span class="error" id="urgency-reason-error"></span></div>
+ <div class="field"><label for="contact-channel">Preferred contact channel</label><select id="contact-channel"><option value="Not specified">Not specified</option><option>Email</option><option>In-app</option></select><span class="help">No notifications are sent.</span></div>
+ </div><div class="form-actions"><button class="btn primary" id="save-request" type="submit">Create local request</button><button class="btn ghost" type="reset">Clear form</button></div><div role="status" class="save-success" id="form-success" hidden tabindex="-1"></div>
+ </form></div>
+ <aside class="panel asidepanel"><h3>Requirements at a glance</h3><div class="asideitem"><span class="aside-code">FR-01</span><p><b>Standardised intake</b></p><p>Capture consistent information with clear validation.</p></div><div class="asideitem"><span class="aside-code">FR-02</span><p><b>Reference generation</b></p><p>Generate a locally unique reference when a valid request is saved.</p></div><div class="asideitem"><span class="aside-code">FR-07</span><p><b>Same-day urgency</b></p><p>A Yes answer assigns High priority under this draft scenario.</p></div><div class="notice">This is a working training MVP. It provides no authentication, clinical decisions, production storage, or patient-data protections.</div></aside>
+ </div>
+</section>
+<section id="view-insights" data-page="insights" hidden>
+ <div class="page-head"><div><div class="eyebrow">Operations / Reporting</div><h1>Request insights</h1><p>A quick view of your local request data, grouped by status and type.</p></div><div class="head-actions"><button class="btn primary" type="button" data-nav="new">Add a request</button></div></div>
+ <div class="insights-grid"><div class="panel"><div class="panel-heading"><h2>Requests by status</h2></div><div class="chart-body" id="chart-status"></div></div><div class="panel"><div class="panel-heading"><h2>Requests by type</h2></div><div class="chart-body" id="chart-type"></div></div></div>
+ <div class="callout"><strong>Reporting limitations:</strong> Metrics are calculated from local demo records. They are not real operational KPIs, do not measure SLAs, and are not evidence of business benefits.</div>
+</section>
+<div class="footer">Cedarbridge Community Services · Fictional workflow for portfolio demonstration. Only synthetic data; all access roles are simulated.</div>
+</div></div></div>
+<dialog id="request-dialog" class="dialog" aria-labelledby="detail-title"><div class="dialog-head"><div><small id="detail-ref"></small><h2 id="detail-title"></h2></div><button type="button" id="detail-close" class="xbtn" aria-label="Close request">×</button></div><div class="dialog-body"><div class="detail-metadata" id="detail-badges"></div><div class="detail-desc" id="detail-description"></div><div class="detail-grid"><div class="detail-card"><h3>Request type</h3><p id="detail-type"></p></div><div class="detail-card"><h3>Service date</h3><p id="detail-date"></p></div><div class="detail-card"><h3>Urgency reason</h3><p id="detail-reason"></p></div><div class="detail-card"><h3>Preferred channel</h3><p id="detail-channel"></p></div></div><hr class="divider"><div class="detail-grid"><div class="field"><label for="detail-owner">Assigned owner</label><select id="detail-owner" class="detail-control"><option value="Unassigned">Unassigned</option><option value="Alex Morgan">Alex Morgan (fictional)</option><option value="Jamie Patel">Jamie Patel (fictional)</option><option value="Sam Rivera">Sam Rivera (fictional)</option></select></div><div class="field"><label for="detail-status">Request status</label><select id="detail-status" class="detail-control"></select><span class="help">Select In Progress and press Save changes; assigning an owner alone does not advance the status.</span></div></div><div class="dialog-actions"><button class="btn primary" id="detail-save" type="button">Save changes</button><button class="btn outline" id="detail-start" type="button" hidden>Move to In Progress</button><span id="detail-rights" class="help"></span></div><div role="status" id="detail-feedback" class="save-success" hidden aria-live="polite"></div><h3 class="section-head">Activity history</h3><ol class="audit" id="detail-audit"></ol><div class="notice">Roles in this demo only control the interface. They are not a security system. No production access or approval rules are implemented.</div></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+(function(){
+"use strict";
+const KEY="cedarbridge-requests-mvp-v1";
+const STATUSES=["New","In Progress","Awaiting Information","Resolved","Closed"];
+const TRANSITIONS={"New":["In Progress","Awaiting Information"],"In Progress":["Awaiting Information","Resolved"],"Awaiting Information":["In Progress","Resolved"],"Resolved":["Closed","In Progress"],"Closed":["In Progress"]};
+const TYPES=["Administration","Facilities","Access","Other"];
+const OWNERS=["Unassigned","Alex Morgan","Jamie Patel","Sam Rivera"];
+const $=id=>document.getElementById(id);
+let storageOK=true, state={version:1,requests:[],counter:0},activeId=null,toastTimer=null;
+function cloneData(o){return JSON.parse(JSON.stringify(o));}
+function load(){try{let stored=localStorage.getItem(KEY);if(stored){let x=JSON.parse(stored);if(x&&Array.isArray(x.requests)&&typeof x.counter==="number"){state=x;}}}catch(e){storageOK=false;$("storage-warning").hidden=false;}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));storageOK=true;$("storage-warning").hidden=true;return true;}catch(e){storageOK=false;$("storage-warning").hidden=false;return false;}}
+function readableDate(value){if(!value)return "Not specified";let dt=new Date(value.length===10?value+"T12:00:00":value);return Number.isNaN(dt.valueOf())?String(value):new Intl.DateTimeFormat("en-GB",{day:"2-digit",month:"short",year:"numeric"}).format(dt);}
+function readableDateTime(value){let dt=new Date(value);return Number.isNaN(dt.valueOf())?"Unknown":new Intl.DateTimeFormat("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(dt);}
+function currentRole(){return $("role").value;}
+function toast(message){let el=$("toast");el.textContent=message;el.hidden=false;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.hidden=true;},4300);}
+function updateStats(){let all=state.requests,open=all.filter(x=>!(["Resolved","Closed"].includes(x.status))).length,high=all.filter(x=>x.priority==="High"&&x.status!=="Closed").length,done=all.filter(x=>["Resolved","Closed"].includes(x.status)).length;$("stat-total").textContent=all.length;$("stat-open").textContent=open;$("stat-high").textContent=high;$("stat-done").textContent=done;}
+function badge(txt,kind){let el=document.createElement("span");el.className="badge "+kind;el.textContent=txt;return el;}
+function statusClass(s){return ({"New":"new","In Progress":"inprogress","Awaiting Information":"waiting","Resolved":"resolved","Closed":"closed"})[s]||"standard";}
+function showPage(page){if(!["queue","new","insights"].includes(page))page="queue";document.querySelectorAll('[data-page]').forEach(el=>el.hidden=el.dataset.page!==page);document.querySelectorAll('.nav [data-nav]').forEach(el=>{let selected=el.dataset.nav===page;el.classList.toggle('active',selected);if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});if(page==="queue")renderQueue();if(page==="insights")renderInsights();window.scrollTo(0,0);}
+function filtered(){let search=$("search").value.trim().toLowerCase(),status=$("filter-status").value,priority=$("filter-priority").value;return state.requests.filter(x=>(!search||[x.ref,x.summary,x.type,x.description].some(v=>String(v||"").toLowerCase().includes(search)))&&(status==="all"||x.status===status)&&(priority==="all"||x.priority===priority)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));}
+function td(text,small){let x=document.createElement("td");if(small){let st=document.createElement("strong");st.textContent=text;x.appendChild(st);let sm=document.createElement("small");sm.textContent=small;x.appendChild(sm);}else x.textContent=text;return x;}
+function renderQueue(){updateStats();let entries=filtered(),tbody=$("request-rows");tbody.replaceChildren();entries.forEach(x=>{let tr=document.createElement("tr");let t=document.createElement("td"),btn=document.createElement("button");btn.type="button";btn.className="linkbutton";btn.textContent=x.ref;btn.dataset.open=x.id;btn.setAttribute("aria-label","Open request "+x.ref);t.appendChild(btn);tr.appendChild(t);tr.appendChild(td(x.summary,x.type));let pri=document.createElement("td");pri.appendChild(badge(x.priority,x.priority==="High"?"high":"standard"));tr.appendChild(pri);let st=document.createElement("td");st.appendChild(badge(x.status,statusClass(x.status)));tr.appendChild(st);tr.appendChild(td(x.owner));
+tr.appendChild(td(readableDate(x.createdAt)));
+let act=document.createElement("td");
+if(x.status==="New"){
+ let start=document.createElement("button");start.type="button";start.className="btn primary small";
+ start.textContent="Start work →";start.dataset.start=x.id;start.setAttribute("aria-label","Start work on "+x.ref);
+ start.disabled=currentRole()!=="coordinator";act.appendChild(start);
+}else{let done=document.createElement("span");done.className="badge inprogress";done.textContent=x.status=== "In Progress"?"Started":"—";act.appendChild(done);}
+tr.appendChild(act);tbody.appendChild(tr);});$("count-label").textContent=entries.length+" of "+state.requests.length+" records";let empty=entries.length===0;$("queue-empty").hidden=!empty;$("load-samples").hidden=state.requests.length!==0;if(state.requests.length!==0){$("empty-title").textContent="No matching requests";$("empty-desc").textContent="Try adjusting your search or filters.";}else{$("empty-title").textContent="Your queue is ready";$("empty-desc").textContent="No requests yet. Create your first fictional service request or load some sample data to explore the workflow.";}}
+function renderBars(id,keys,selector){let outer=$(id);outer.replaceChildren();let counts=keys.map(key=>({key,n:state.requests.filter(x=>selector(x)===key).length}));let max=Math.max(1,...counts.map(x=>x.n));counts.forEach(item=>{let row=document.createElement("div");row.className="barrow";let name=document.createElement("span");name.textContent=item.key;let track=document.createElement("div");track.className="bartrack";track.setAttribute("role","img");track.setAttribute("aria-label",item.key+": "+item.n+" requests");let fill=document.createElement("div");fill.className="barfill";fill.style.width=(item.n/max*100)+"%";track.appendChild(fill);let count=document.createElement("b");count.textContent=item.n;row.append(name,track,count);outer.appendChild(row);});}
+function renderInsights(){renderBars("chart-status",STATUSES,x=>x.status);renderBars("chart-type",TYPES,x=>x.type);}
+function todayDate(){let d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+"-"+m+"-"+day;}
+function nextReference(){let yy=new Date().getFullYear(),n=Math.max(0,Number(state.counter)||0);let ref;do{n++;ref="CBR-"+yy+"-"+String(n).padStart(4,"0");}while(state.requests.some(x=>x.ref===ref));state.counter=n;return ref;}
+function makeId(){if(typeof crypto!=="undefined"&&crypto.randomUUID)return crypto.randomUUID();let buf=new Uint8Array(16);if(typeof crypto!=="undefined"&&crypto.getRandomValues){crypto.getRandomValues(buf);return Array.from(buf,b=>b.toString(16).padStart(2,'0')).join('');}return "demo-"+Date.now()+"-"+Math.random().toString(36).slice(2);}
+function clearErrors(){for(const k of ["request-type","service-date","request-summary","request-description","impact","urgency-reason"]){let el=$(k+"-error");if(el)el.textContent="";let control=$(k);if(control)control.removeAttribute("aria-invalid");}}
+function fieldError(key,message){let e=$(key+"-error");if(e)e.textContent=message;let control=$(key);if(control)control.setAttribute("aria-invalid","true");return control||document.querySelector('input[name="impact"]');}
+function getImpact(){return document.querySelector('input[name="impact"]:checked')?.value||"";}
+function toggleUrgency(){let yes=getImpact()==="Yes";$("reason-group").hidden=!yes;if(!yes){$("urgency-reason").value="";$("urgency-reason-error").textContent="";$("urgency-reason").removeAttribute("aria-invalid");}}
+function formSubmission(e){e.preventDefault();clearErrors();$("form-success").hidden=true;let type=$("request-type").value,date=$("service-date").value,summary=$("request-summary").value.trim(),desc=$("request-description").value.trim(),impact=getImpact(),reason=$("urgency-reason").value.trim();let first=null;function fail(k,msg){let c=fieldError(k,msg);if(!first)first=c;}
+if(!TYPES.includes(type))fail("request-type","Choose a request type.");
+if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(new Date(date+"T12:00:00").valueOf()))fail("service-date","Enter a valid service date.");
+if(summary.length<10||summary.length>120)fail("request-summary","Enter between 10 and 120 characters.");
+if(desc.length<20||desc.length>2000)fail("request-description","Enter between 20 and 2,000 characters.");
+if(!["Yes","No"].includes(impact))fail("impact","Select Yes or No.");
+if(impact==="Yes"&&!reason)fail("urgency-reason","Explain the same-day service impact.");
+if(first){first.focus();toast("Please correct the highlighted fields.");return;}
+let old=cloneData(state),now=new Date().toISOString(),ref=nextReference(),newRecord={id:makeId(),ref,type,serviceDate:date,summary,description:desc,sameDayImpact:impact,urgencyReason:impact==="Yes"?reason:"",contactChannel:$("contact-channel").value,priority:impact==="Yes"?"High":"Standard",status:"New",owner:"Unassigned",createdAt:now,updatedAt:now,audit:[{at:now,action:"Request created",detail:"New request saved locally; initial status New and owner Unassigned."}]};state.requests.push(newRecord);
+if(!persist()){state=old;toast("Could not save your request. Check browser storage and try again.");return;}
+$("request-form").reset();$("reason-group").hidden=true;$("form-success").hidden=false;$("form-success").textContent="Saved locally: "+ref+" · Priority: "+newRecord.priority+" · Status: New. Open Work queue to track the request.";$("form-success").focus();toast("Request "+ref+" saved to this browser.");updateStats();}
+function safeStatusTransitions(current){return [current,...(TRANSITIONS[current]||[])];}
+function openDetail(id){let r=state.requests.find(x=>x.id===id);if(!r)return;activeId=r.id;$("detail-ref").textContent=r.ref+" · Created "+readableDateTime(r.createdAt);$("detail-title").textContent=r.summary;$("detail-description").textContent=r.description;$("detail-type").textContent=r.type;$("detail-date").textContent=readableDate(r.serviceDate);$("detail-reason").textContent=r.urgencyReason||"None";$("detail-channel").textContent=r.contactChannel||"Not specified";let b=$("detail-badges");b.replaceChildren(badge(r.priority,r.priority==="High"?"high":"standard"),badge(r.status,statusClass(r.status)));$("detail-owner").value=OWNERS.includes(r.owner)?r.owner:"Unassigned";let st=$("detail-status");st.replaceChildren();safeStatusTransitions(r.status).forEach(s=>{let op=document.createElement("option");op.value=s;op.textContent=s;st.appendChild(op)});st.value=r.status;
+let audit=$("detail-audit");audit.replaceChildren();(r.audit||[]).slice().reverse().forEach(item=>{let li=document.createElement("li");let text=document.createElement("b");text.textContent=item.action||"Update";let details=document.createElement("div");details.textContent=item.detail||"";let time=document.createElement("time");time.textContent=readableDateTime(item.at);li.append(text,details,time);audit.appendChild(li);});
+let viewer=currentRole()==="viewer";$("detail-feedback").hidden=true;$("detail-start").hidden=viewer||r.status!=="New";$("detail-owner").disabled=viewer;$("detail-status").disabled=viewer;$("detail-save").disabled=viewer;$("detail-rights").textContent=viewer?"Read-only demo role: updates disabled.":"Changes will be saved locally.";let modal=$("request-dialog");if(!modal.open)modal.showModal();}
+function saveDetail(){let r=state.requests.find(x=>x.id===activeId);if(!r)return;if(currentRole()!=="coordinator"){toast("This demo role cannot edit requests.");return;}let owner=$("detail-owner").value,status=$("detail-status").value;if(!OWNERS.includes(owner)){toast("Invalid owner selected.");return;}if(!safeStatusTransitions(r.status).includes(status)){toast("That status transition is not allowed.");return;}if(owner===r.owner&&status===r.status){toast("No changes to save.");return;}let prev=cloneData(state),at=new Date().toISOString();if(owner!==r.owner){r.audit.push({at,action:"Owner changed",detail:r.owner+" → "+owner});r.owner=owner;}if(status!==r.status){r.audit.push({at,action:"Status changed",detail:r.status+" → "+status});r.status=status;}r.updatedAt=at;if(!persist()){state=prev;toast("Could not save these changes.");return;}renderQueue();openDetail(r.id);
+let verified="";try{const stored=JSON.parse(localStorage.getItem(KEY)||"null"),saved=stored?.requests?.find(x=>x.id===r.id);verified=(saved?.status===r.status&&saved?.owner===r.owner)?" Browser storage checked.":" WARNING: browser storage does not match the record!";}catch(e){verified=" WARNING: browser storage could not be verified.";}
+let msg="Saved successfully. Current request status: "+r.status+"; owner: "+r.owner+"."+verified;$("detail-feedback").textContent=msg;$("detail-feedback").hidden=false;toast(msg);}
+function directStartWork(id){
+ let r=state.requests.find(x=>x.id===id);if(!r){toast("Record not found. Re-open the Work queue.");return;}
+ const result=$("queue-save-feedback");
+ function msg(text,ok){result.hidden=false;result.textContent=text;result.style.background=ok?"#e7f6ed":"#fff2ea";result.style.borderColor=ok?"#b5e0c7":"#dfad8e";result.style.color=ok?"#245e3f":"#8b361e";result.scrollIntoView({behavior:"smooth",block:"nearest"});toast(text);}
+ if(currentRole()!=="coordinator"){msg("Change blocked: choose the Operations Coordinator demo role.",false);return;}
+ if(r.status!=="New"){msg(r.ref+" is already "+r.status+". No change needed.",true);return;}
+ let previous=cloneData(state),time=new Date().toISOString();
+ r.status="In Progress";r.updatedAt=time;
+ if(!Array.isArray(r.audit))r.audit=[];
+ r.audit.push({at:time,action:"Status changed",detail:"New → In Progress (Start work action; v1.3)"});
+ if(!persist()){state=previous;msg("Storage error: could not save your change. Your previous record remains unchanged.",false);renderQueue();return;}
+ // Check WHAT was actually written, rather than trusting the in-memory UI.
+ try {
+  const stored=JSON.parse(localStorage.getItem(KEY)||"null");
+  const saved=stored?.requests?.find(x=>x.id===id);
+  if(saved?.status!=="In Progress"){
+   msg("Verification failed: browser storage did NOT return In Progress. Export JSON and share a screenshot; don't delete any records.",false);
+   renderQueue();return;
+  }
+ } catch(e) {
+  msg("Verification blocked: could not read saved status. "+String(e?.message||e),false);
+  renderQueue();return;
+ }
+ renderQueue();
+ msg("SAVED & VERIFIED: "+r.ref+" is In Progress in browser storage. Refresh (Ctrl+R) to confirm.",true);
+}
+function moveToInProgress(){let r=state.requests.find(x=>x.id===activeId);if(!r)return;
+ if(currentRole()!=="coordinator"){toast("Only the coordinator demo role can update requests.");return;}
+ if(r.status!=="New"){toast("This request is already "+r.status+". Use the status dropdown for another permitted transition.");return;}
+ $("detail-status").value="In Progress";saveDetail();}
+function importDemoJSON(file){if(!file)return;
+ if(file.size>3000000){toast("Demo file is too large (3 MB maximum).");return;}
+ let reader=new FileReader();reader.onerror=()=>toast("Could not read this file.");reader.onload=()=>{
+  try{
+   let parsed=JSON.parse(String(reader.result));
+   if(parsed?.app!=="Cedarbridge Service Requests MVP"||parsed.schemaVersion!==1||!Array.isArray(parsed.requests))throw new Error("Not a Cedarbridge v1 JSON export");
+   if(parsed.requests.length>1000)throw new Error("Maximum 1000 synthetic requests");
+   const ids=new Set(),refs=new Set();
+   let allowedChannels=["Not specified","Email","In-app"];
+   const clean=parsed.requests.map((v,i)=>{
+    if(!v||typeof v!=="object")throw new Error("Invalid item "+(i+1));
+    if(!/^[A-Za-z0-9_-]{1,120}$/.test(String(v.id||"")))throw new Error("Invalid record identifier");
+    if(!/^CBR-\d{4}-\d{4,}$/.test(String(v.ref||"")))throw new Error("Invalid reference");
+    if(ids.has(v.id)||refs.has(v.ref))throw new Error("Duplicate IDs or references");ids.add(v.id);refs.add(v.ref);
+    if(!TYPES.includes(v.type)||!STATUSES.includes(v.status)||!OWNERS.includes(v.owner)||!["High","Standard"].includes(v.priority))throw new Error("Invalid record field");
+    if(!["Yes","No"].includes(v.sameDayImpact)||!allowedChannels.includes(v.contactChannel||"Not specified"))throw new Error("Invalid intake values");
+    for(let k of ["serviceDate","summary","description","createdAt","updatedAt"]){if(typeof v[k]!=="string"||v[k].length>2500)throw new Error("Invalid "+k)}
+    if(!Array.isArray(v.audit)||v.audit.length>5000)throw new Error("Invalid activity history");
+    for(let item of v.audit){if(!item||typeof item.at!=="string"||typeof item.action!=="string"||typeof item.detail!=="string")throw new Error("Invalid history event")}
+    return cloneData(v);
+   });
+   if(state.requests.length&&!confirm("Replace all existing fictional local requests with the "+clean.length+" records in this export? Export your current data first if needed."))return;
+   let old=cloneData(state);let maxCounter=clean.reduce((m,v)=>Math.max(m,parseInt(v.ref.match(/-(\d+)$/)?.[1]||"0",10)),0);
+   state={version:1,requests:clean,counter:Math.max(maxCounter,Number(state.counter)||0)};
+   if(!persist()){state=old;toast("Import failed: browser storage unavailable.");return;}
+   renderQueue();showPage("queue");toast("Restored "+clean.length+" fictional demo requests.");
+  }catch(err){toast("Import rejected: "+err.message)}
+ };reader.readAsText(file);
+}
+function exportFile(filename,mime,text){let file=new Blob([text],{type:mime}),url=URL.createObjectURL(file),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+function csvSafe(value){let str=String(value??"");if(/^[\s]*[=+@-]/.test(str))str="'"+str;return '"'+str.replace(/"/g,'""')+'"';}
+function exportJSON(){let exportData={app:"Cedarbridge Service Requests MVP",schemaVersion:1,exportedAt:new Date().toISOString(),note:"Fictional browser-only demonstration data. Not a backup of a real service.",requests:state.requests};exportFile("cedarbridge-demo-requests.json","application/json;charset=utf-8",JSON.stringify(exportData,null,2));toast("JSON export prepared.");}
+function exportCSV(){const cols=["ref","type","serviceDate","summary","description","sameDayImpact","urgencyReason","contactChannel","priority","status","owner","createdAt","updatedAt"];let lines=[cols.map(csvSafe).join(","),...state.requests.map(r=>cols.map(k=>csvSafe(r[k])).join(","))];exportFile("cedarbridge-demo-requests.csv","text/csv;charset=utf-8","\uFEFF"+lines.join("\r\n"));toast("CSV export prepared.");}
+function seed(){if(state.requests.length){toast("Sample requests are only available when the queue is empty.");return;}if(currentRole()!=="coordinator"){toast("Switch to Operations Coordinator to create samples.");return;}let samples=[{type:"Administration",serviceDate:todayDate(),summary:"Review fictional room booking request",description:"The simulation team needs a room booking reviewed for a hypothetical service meeting.",sameDayImpact:"Yes",urgencyReason:"The simulated meeting is scheduled later today.",contactChannel:"In-app",owner:"Alex Morgan",status:"In Progress"},{type:"Facilities",serviceDate:todayDate(),summary:"Arrange a test meeting room inspection",description:"Please check the mock meeting room setup and confirm that the sample equipment list is complete.",sameDayImpact:"No",urgencyReason:"",contactChannel:"Email",owner:"Unassigned",status:"New"},{type:"Access",serviceDate:todayDate(),summary:"Provide example building access support",description:"A fictional new team member needs training access to a simulated office location.",sameDayImpact:"No",urgencyReason:"",contactChannel:"In-app",owner:"Jamie Patel",status:"Awaiting Information"},{type:"Other",serviceDate:todayDate(),summary:"Document fictional service handover notes",description:"Prepare and review synthetic handover notes for a pretend community services team.",sameDayImpact:"No",urgencyReason:"",contactChannel:"Not specified",owner:"Sam Rivera",status:"Resolved"}];let prev=cloneData(state),now=new Date().toISOString();samples.forEach(s=>{let ref=nextReference();let rec={id:makeId(),ref,...s,priority:s.sameDayImpact==="Yes"?"High":"Standard",createdAt:now,updatedAt:now,audit:[{at:now,action:"Sample request created",detail:"Fictional seeded example; saved locally."},{at:now,action:"Sample state set",detail:"Demonstration owner: "+s.owner+"; status: "+s.status+"."}]};state.requests.push(rec);});if(!persist()){state=prev;toast("Sample records could not be saved.");return;}renderQueue();toast("4 fictional sample requests added.");}
+function clearLocalData(){if(currentRole()!=="coordinator"){toast("Read-only role cannot delete demo requests.");return;}if(!state.requests.length){toast("No demo requests to delete.");return;}if(!confirm("Delete all Cedarbridge requests stored in this browser? This cannot be undone unless you exported a copy."))return;let prev=cloneData(state);state={version:1,requests:[],counter:prev.counter};if(!persist()){state=prev;toast("Could not clear local records.");return;}renderQueue();toast("Local demo requests deleted.");}
+function wire(){document.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.nav)));$("role").addEventListener("change",()=>{if($("request-dialog").open&&activeId)openDetail(activeId);$("load-samples").disabled=currentRole()==="viewer";renderQueue();$("save-request").disabled=currentRole()==="viewer";$("clear-data").disabled=currentRole()==="viewer";toast(currentRole()==="viewer"?"Read-only demo role selected.":"Operations Coordinator demo role selected.");});["search","filter-status","filter-priority"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",renderQueue));$("request-form").addEventListener("submit",formSubmission);$("request-form").addEventListener("reset",()=>{clearErrors();$("reason-group").hidden=true;$("form-success").hidden=true;});document.querySelectorAll('input[name="impact"]').forEach(i=>i.addEventListener("change",()=>{toggleUrgency();$("impact-error").textContent="";}));$("request-rows").addEventListener("click",e=>{let btn=e.target.closest("button[data-open]");if(btn)openDetail(btn.dataset.open);let start=e.target.closest("button[data-start]");if(start)directStartWork(start.dataset.start);});$("detail-close").addEventListener("click",()=>$("request-dialog").close());$("detail-save").addEventListener("click",saveDetail);$("detail-start").addEventListener("click",moveToInProgress);$("import-json").addEventListener("click",()=>$("import-file").click());$("import-file").addEventListener("change",e=>{importDemoJSON(e.target.files[0]);e.target.value="";});$("export-json").addEventListener("click",exportJSON);$("export-csv").addEventListener("click",exportCSV);$("load-samples").addEventListener("click",seed);$("clear-data").addEventListener("click",clearLocalData);}
+load();wire();renderQueue();
+window.CedarbridgeDemo={getState:()=>cloneData(state),storageKey:KEY}; // inspection support for portfolio demonstrations and tests only; not a security boundary
+})();
+</script>
+</body>
+</html>
